@@ -1,8 +1,9 @@
 import requests
 import telebot
-from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
-from supabase_conf import supabase
-from constants import Callbacks, Verdicts, OPEN_WEATHER_UNITS, OPEN_WEATHER_LANG, OPEN_WEATHER_KEY, BOT_TOKEN
+from telebot.types import Message
+from supabase_conf import get_location, set_location
+from constants import Callbacks, Verdicts, Commands, OPEN_WEATHER_UNITS, OPEN_WEATHER_LANG, OPEN_WEATHER_KEY, BOT_TOKEN
+from keyboards import start_keyboard_buttons, location_keyboard_buttons, get_keyboard
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -17,13 +18,6 @@ def calculate_overall_coefficient(temperature, humidity, ):
             (normalized_humidity * humidity_weight)
     )
     return overall_coefficient
-
-
-def get_location(id):
-    response = supabase.table('users').select('lat', 'lon').eq('id', id).execute()
-    lat = round(float(response.data[0]['lat']), ndigits=2)
-    lon = round(float(response.data[0]['lon']), ndigits=2)
-    return lat, lon
 
 
 def get_weather(lat, lon):
@@ -55,59 +49,55 @@ def get_weather(lat, lon):
     return weather_info + verdict.value
 
 
+def send_response(user_id, text, reply_markup=None):
+    bot.send_message(user_id, text, reply_markup=reply_markup)
+
+
 @bot.message_handler(content_types=['text'])
-def get_text_messages(message):
-    if not isinstance(message, Message):
-        return
-    if message.text.lower() == "п" or message.text.lower() == "погодка":
-        lat, lon = get_location(message.chat.id)
-        a = get_weather(lat, lon)
-        bot.send_message(message.from_user.id, a)
-    elif message.text == "/help":
-        bot.send_message(message.from_user.id, "Напиши Погодка")
-    elif message.text == "/start":
-        keyboard = InlineKeyboardMarkup()
-        key_city = InlineKeyboardButton(text='Город', callback_data='city')
-        keyboard.add(key_city)
-        key_no = InlineKeyboardButton(text='Нет', callback_data='no')
-        keyboard.add(key_no)
-        bot.send_message(message.from_user.id, text='Настройки', reply_markup=keyboard)
+def handle_text(message: Message):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    text = message.text.lower().strip()
+    keyboard = None
+    if text == Commands.START:
+        keyboard = get_keyboard(start_keyboard_buttons)
+        response_text = 'Привет! Я бот, который поможет тебе узнать погоду в твоем городе, а также расскажет как одеться по погоде. Чтобы начать выбери одну из кнопок. Если ты хочешь узнать погоду в своем городе, то отправь мне свою геопозицию - {0}'.format(
+            Commands.LOCATION)
+    elif text == Commands.LOCATION:
+        keyboard = get_keyboard(location_keyboard_buttons)
+        response_text = 'Пришлите вашу геопозицию'
+    elif text == Commands.HELP:
+        response_text = '{0} - информация о погоде в твоем городе'.format(Commands.WEATHER)
+    elif text == Commands.WEATHER:
+        lat, lon = get_location(chat_id)
+        response_text = get_weather(lat, lon)
     else:
-        bot.send_message(message.from_user.id, "Напиши Погодка")
+        response_text = 'Я тебя не понимаю. Напиши `{0}`'.format(Commands.HELP)
+    send_response(user_id, response_text, keyboard)
 
 
 @bot.message_handler(content_types=['location'])
-def handle_location(message):
-    if isinstance(message, Message):
-        chat_id = message.chat.id
-        lat = message.location.latitude
-        lon = message.location.longitude
-        print("{0}, {1}".format(lat,
-                                lon))
-        existing_user = supabase.table('users').select('*').eq('id', chat_id).execute().data
-        if len(existing_user) <= 0:
-            supabase.table('users').insert({"id": chat_id, 'lat': lat, 'lon': lon}).execute()
-            bot.send_message(chat_id, 'Геопозиция успешно добавлена!')
-        else:
-            supabase.table('users').update({'lat': lat, 'lon': lon}).eq("id", chat_id).execute()
-            bot.send_message(chat_id, 'Геопозиция успешно обновлена!')
+def handle_location(message: Message):
+    chat_id = message.chat.id
+    set_location(chat_id, message.location.latitude, message.location.longitude)
+    send_response(chat_id, 'Геопозиция успешно обновлена!')
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     chat_id = call.message.chat.id
     call_data = call.data
+    keyboard = None
     if call_data == Callbacks.CITY_INFO:
-        keyboard = InlineKeyboardMarkup()
-        key_check_city = InlineKeyboardButton(text='Посмотреть выбранный город', callback_data=Callbacks.CITY_CURRENT)
-        keyboard.add(key_check_city)
-        key_no = InlineKeyboardButton(text='Изменить город', callback_data=Callbacks.CITY_CHANGE)
-        keyboard.add(key_no)
-        bot.send_message(chat_id, 'Что хочешь?', reply_markup=keyboard)
+        keyboard = get_keyboard(location_keyboard_buttons)
+        response_text = 'Что хочешь?'
     elif call.data == Callbacks.CITY_CURRENT:
-        bot.send_message(chat_id, 'Выбранный город')  # TODO дописать город
+        response_text = 'Выбранный город'  # TODO дописать город
     elif call.data == Callbacks.CITY_CHANGE:
-        bot.send_message(chat_id, 'Напишите свой город или пришлите вашу геопозицию')
+        response_text = 'Напишите свой город или пришлите вашу геопозицию'
+    else:
+        response_text = 'Неверная команда'
+    send_response(chat_id, response_text, keyboard)
 
 
 bot.polling(none_stop=True, interval=0)

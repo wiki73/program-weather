@@ -4,14 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e8236e2b-430b-436a-b625-f3a694adb397" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="e8236e2b-430b-436a-b625-f3a694adb397" name="Changes" comment="Refactor code and security update.&#10;&#10;Created `constants.py`. The file contains all unchangeable data such as environment variables, enums and open weather request params&#10;&#10;Made open api url clearer by exclude params in dictionary and constant parameters exclude to `constants.py`&#10;&#10;Security:&#10;All private keys and tokens now stores as environment variables.&#10;Added .gitignore and exclude .env for security purposes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase_conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/supabase_conf.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,6 +113,30 @@
       <option name="presentableId" value="Default" />
       <updated>1714906364184</updated>
     </task>
+    <task id="LOCAL-00001" summary="Refactor code and security update.&#10;&#10;Created `constants.py`. The file contains all unchangeable data such as environment variables, enums and open weather request params&#10;&#10;Made open api url clearer by exclude params in dictionary and constant parameters exclude to `constants.py`&#10;&#10;Security:&#10;All private keys and tokens now stores as environment variables.&#10;Added .gitignore and exclude .env for security purposes.">
+      <option name="closed" value="true" />
+      <created>1715102458247</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1715102458247</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Refactor code and security update.&#10;&#10;Created `constants.py`. The file contains all unchangeable data such as environment variables, enums and open weather request params&#10;&#10;Made open api url clearer by exclude params in dictionary and constant parameters exclude to `constants.py`&#10;&#10;Security:&#10;All private keys and tokens now stores as environment variables.&#10;Added .gitignore and exclude .env for security purposes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor code and security update.&#10;&#10;Created `constants.py`. The file contains all unchangeable data such as environment variables, enums and open weather request params&#10;&#10;Made open api url clearer by exclude params in dictionary and constant parameters exclude to `constants.py`&#10;&#10;Security:&#10;All private keys and tokens now stores as environment variables.&#10;Added .gitignore and exclude .env for security purposes." />
   </component>
 </project>

@@ -19,6 +19,8 @@ class Callbacks(Enum):
     CITY_INFO = 'CITY_INFO'
     CITY_CURRENT = 'CITY_CURRENT'
     CITY_CHANGE = 'CITY_CHANGE'
+    WEATHER = 'WEATHER'
+    CANCEL = 'CANCEL'
 
 
 class Verdicts(Enum):
@@ -26,6 +28,13 @@ class Verdicts(Enum):
     WARM = 'Вердикт: Тепло. Кофта не помешает',
     MEDIUM = 'Вердикт: Средне. Кофта не помешает',
     COLD = 'Вердикт: Холодно. Советую взять куртку!'
+
+
+class Commands(Enum):
+    START = '/start',
+    HELP = '/help',
+    WEATHER = '/weather',
+    LOCATION = '/location',
 
 # ctrl + R a shortcut to replace string
 # ctrl + G a shortcut to select specific line
