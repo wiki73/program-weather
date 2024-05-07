@@ -2,11 +2,9 @@ import requests
 import telebot
 from telebot.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from supabase_conf import supabase
+from constants import Callbacks, Verdicts, OPEN_WEATHER_UNITS, OPEN_WEATHER_LANG, OPEN_WEATHER_KEY, BOT_TOKEN
 
-bot = telebot.TeleBot('6812718555:AAFDyqCMLX_CUnB8vg-U24Kb3B7sMT5YS-U')
-
-CHECK_CITY = 'check_city'
-CHANGE = 'change'
+bot = telebot.TeleBot(BOT_TOKEN)
 
 
 def calculate_overall_coefficient(temperature, humidity, ):
@@ -25,38 +23,37 @@ def get_location(id):
     response = supabase.table('users').select('lat', 'lon').eq('id', id).execute()
     lat = round(float(response.data[0]['lat']), ndigits=2)
     lon = round(float(response.data[0]['lon']), ndigits=2)
-    print(lat, lon)
     return lat, lon
 
 
-# https://api.openweathermap.org/data/3.0/onecall?lat=33.44&lon=-94.04&exclude=hourly,daily&appid=79d1ca96933b0328e1c7e3e7a26cb347
-# https://api.openweathermap.org/data/3.0/
-# ?lat=50.18&lon=39.62&units=metric&lang=ru&appid=79d1ca96933b0328e1c7e3e7a26cb347
 def get_weather(lat, lon):
-    url = 'https://api.openweathermap.org/data/3.0/onecall?lat={0}&lon={1}&units=metric&lang=ru&appid=79d1ca96933b0328e1c7e3e7a26cb347'.format(
-        lat, lon)
-    weather_data = requests.get(url).json()['current']
+    params = {
+        'lat': lat,
+        'lon': lon,
+        'units': OPEN_WEATHER_UNITS,
+        'lang': OPEN_WEATHER_LANG,
+        'appid': OPEN_WEATHER_KEY
+    }
+    url = 'https://api.openweathermap.org/data/3.0/onecall'
+    response = requests.get(url, params=params)
+    weather_data = response.json()['current']
     temp = round(float(weather_data['temp']), ndigits=2)
     wind = round(float(weather_data['wind_speed']), ndigits=1)
     humidity = int(weather_data['humidity'])
     sky = weather_data['weather'][0]['description']
     weather_info = 'В вашем городе: {0} \nТемпература: {1}\nВлажность: {2} %\nВетер: {3} м/с\n'.format(sky, temp,
                                                                                                        humidity, wind)
-    print(weather_info)
     value_3 = calculate_overall_coefficient(21, 40)
     value_2 = calculate_overall_coefficient(14, 60)
     v = calculate_overall_coefficient(temp, humidity)
     if v > value_3:
-        verdict = 'Вердикт: Жара. Одевайся легко'
+        verdict = Verdicts.HOT
     elif v > value_2:
-        verdict = 'Вердикт: Средне. Кофта не помешает'
+        verdict = Verdicts.MEDIUM
     else:
-        verdict = 'Вердикт: Холодно. Советую взять куртку!'
-    return weather_info + verdict
+        verdict = Verdicts.COLD
+    return weather_info + verdict.value
 
-
-# ctrl + R a shortcut to replace string
-# ctrl + G a shortcut to select specific line
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -88,7 +85,7 @@ def handle_location(message):
         print("{0}, {1}".format(lat,
                                 lon))
         existing_user = supabase.table('users').select('*').eq('id', chat_id).execute().data
-        if not len(existing_user) > 0:
+        if len(existing_user) <= 0:
             supabase.table('users').insert({"id": chat_id, 'lat': lat, 'lon': lon}).execute()
             bot.send_message(chat_id, 'Геопозиция успешно добавлена!')
         else:
@@ -99,17 +96,18 @@ def handle_location(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     chat_id = call.message.chat.id
-    if call.data == "city":
+    call_data = call.data
+    if call_data == Callbacks.CITY_INFO:
         keyboard = InlineKeyboardMarkup()
-        key_check_city = InlineKeyboardButton(text='Посмотреть выбранный город', callback_data=CHECK_CITY)
+        key_check_city = InlineKeyboardButton(text='Посмотреть выбранный город', callback_data=Callbacks.CITY_CURRENT)
         keyboard.add(key_check_city)
-        key_no = InlineKeyboardButton(text='Изменить город', callback_data=CHANGE)
+        key_no = InlineKeyboardButton(text='Изменить город', callback_data=Callbacks.CITY_CHANGE)
         keyboard.add(key_no)
         bot.send_message(chat_id, 'Что хочешь?', reply_markup=keyboard)
-    elif call.data == CHECK_CITY:
-        bot.send_message(chat_id, f'Выбранный город ')  # TODO дописать город
-    elif call.data == CHANGE:
-        bot.send_message(chat_id, f'Напишите свой город или пришлите вашу геопозицию')
+    elif call.data == Callbacks.CITY_CURRENT:
+        bot.send_message(chat_id, 'Выбранный город')  # TODO дописать город
+    elif call.data == Callbacks.CITY_CHANGE:
+        bot.send_message(chat_id, 'Напишите свой город или пришлите вашу геопозицию')
 
 
 bot.polling(none_stop=True, interval=0)
