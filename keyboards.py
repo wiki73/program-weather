@@ -33,3 +33,11 @@ def get_keyboard(buttons):
     for button in buttons:
         keyboard.add(InlineKeyboardButton(text=button['text'], callback_data=button['callback']))
     return keyboard
+
+
+def get_start_keyboard():
+    return get_keyboard(start_keyboard_buttons)
+
+
+def get_location_keyboard():
+    return get_keyboard(location_keyboard_buttons)

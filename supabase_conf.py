@@ -12,8 +12,4 @@ def get_location(user_id):
 
 
 def set_location(user_id, lat, lon):
-    existing_user = supabase.table('users').select('*').eq('id', user_id).execute().data
-    if len(existing_user) <= 0:
-        supabase.table('users').insert({"id": user_id, 'lat': lat, 'lon': lon}).execute()
-    else:
-        supabase.table('users').update({'lat': lat, 'lon': lon}).eq("id", user_id).execute()
+    supabase.table('users').upsert({'lat': lat, 'lon': lon, "id": user_id}).execute()
